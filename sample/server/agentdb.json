@@ -1,0 +1,12 @@
+{
+  "a3855a9d-864b-4613-91b3-27d564a9ce8d": {
+    "name": "My Ubuntu",
+    "server": "127.0.0.1:44444",
+    "key": "hello world",
+    "pull": true,
+    "pull_interval": 300,
+    "report": true,
+    "report_interval": 60,
+    "tasks": {}
+  }
+}
