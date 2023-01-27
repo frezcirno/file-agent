@@ -148,17 +148,36 @@ impl Agent {
             }
 
             while buf.len() > protocol::HEADER_LEN {
-                let msg: HashMap<Uuid, TaskSpec> =
-                    match self.decode(&mut buf).map(|resp: Response| resp.into()) {
-                        Ok(Ok(msg)) => msg,
-                        Err(DecodeError::NotEnoughData) => {
-                            break;
-                        }
-                        Ok(Err(_)) | Err(DecodeError::InvalidData) => {
-                            log::error!("msg decode failed: invalid data");
-                            return Err(ErrorKind::InvalidData.into());
-                        }
-                    };
+                let msg: Response = match self.decode(&mut buf) {
+                    Ok(msg) => msg,
+                    Err(DecodeError::NotEnoughData) => {
+                        break;
+                    }
+                    Err(DecodeError::InvalidData) => {
+                        log::error!("msg decode failed: invalid data");
+                        return Err(ErrorKind::InvalidData.into());
+                    }
+                };
+
+                match msg {
+                    Response::Object(_) => {},
+                    Response::Error(msg) => {
+                        log::error!("server error: {}", msg);
+                        return Err(ErrorKind::InvalidData.into());
+                    }
+                    _ => {
+                        log::error!("unexpected response: {:?}", msg);
+                        return Err(ErrorKind::InvalidData.into());
+                    }
+                };
+
+                let msg = match msg.into() {
+                    Ok(msg) => msg,
+                    Err(e) => {
+                        log::error!("msg decode failed: {:?}", e);
+                        return Err(ErrorKind::InvalidData.into());
+                    }
+                };
 
                 config::dump(&msg, "tasks.json").expect("save task failed");
 
