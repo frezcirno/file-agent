@@ -236,7 +236,7 @@ struct Args {
 
     /// Tasks file
     #[arg(short, long, value_name = "FILE")]
-    task_file: PathBuf,
+    task_file: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -247,7 +247,9 @@ async fn main() {
 
     let config = config::load(&args.config).expect("load config failed");
 
-    Arc::new(Agent::new(config, args.task_file).await)
-        .start()
-        .await;
+    let task_file = args
+        .task_file
+        .unwrap_or(dirs::data_dir().unwrap().join("agent").join("tasks.json"));
+
+    Arc::new(Agent::new(config, task_file).await).start().await;
 }

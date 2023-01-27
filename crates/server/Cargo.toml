@@ -19,3 +19,4 @@ bytes = "1"
 protocol = { path = "../protocol" }
 url = "2.3.1"
 clap = { version = "4", features = ["derive"] }
+dirs = "4.0.0"

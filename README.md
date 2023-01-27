@@ -24,7 +24,7 @@ On the server side, it is a web application that:
 ### Client
 
 ```bash
-agent --config /path/to/config.json --task-file /path/to/task.json
+$ agent -c /path/to/config.json
 ```
 
 `config.json` File Format:
@@ -46,7 +46,7 @@ agent --config /path/to/config.json --task-file /path/to/task.json
 ### Server
 
 ```bash
-server --config /path/to/config.json --agentdb-file /path/to/agentdb.json --logs-dir /path/to/logs
+$ server -c /path/to/config.json
 ```
 
 `config.json` File Format:

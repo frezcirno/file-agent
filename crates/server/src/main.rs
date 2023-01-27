@@ -181,11 +181,11 @@ struct Args {
 
     /// Agent data file
     #[arg(short, long, value_name = "FILE")]
-    agentdb_path: PathBuf,
+    agentdb_path: Option<PathBuf>,
 
     /// Logs path
     #[arg(short, long, value_name = "FILE")]
-    logs_dir: PathBuf,
+    logs_dir: Option<PathBuf>,
 }
 
 #[tokio::main]
@@ -196,7 +196,18 @@ async fn main() {
 
     let config = config::load(&args.config).expect("load config failed");
 
-    Arc::new(Server::new(config, args.agentdb_path, args.logs_dir).await)
+    let agentdb_path = args.agentdb_path.unwrap_or(
+        dirs::data_dir()
+            .unwrap()
+            .join("server")
+            .join("agentdb_path.json"),
+    );
+
+    let logs_dir = args
+        .logs_dir
+        .unwrap_or(dirs::data_dir().unwrap().join("server").join("logs"));
+
+    Arc::new(Server::new(config, agentdb_path, logs_dir).await)
         .start()
         .await;
 }
