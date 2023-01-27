@@ -2123,6 +2123,7 @@ dependencies = [
  "clap",
  "dirs",
  "env_logger",
+ "http-types",
  "log",
  "protocol",
  "serde",

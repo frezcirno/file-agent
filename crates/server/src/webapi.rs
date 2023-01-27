@@ -1,6 +1,8 @@
 use crate::agentdb::Agent;
 use crate::Server;
+use http_types::headers::HeaderValue;
 use std::sync::Arc;
+use tide::security::{CorsMiddleware, Origin};
 use tide::{prelude::*, Body, Error, Request, StatusCode};
 use uuid::Uuid;
 
@@ -9,6 +11,14 @@ pub struct WebApi {}
 impl WebApi {
     pub async fn start_api(ctx: &Arc<Server>) {
         let mut app = tide::with_state(ctx.clone());
+
+        let cors = CorsMiddleware::new()
+            .allow_methods("GET, POST, OPTIONS".parse::<HeaderValue>().unwrap())
+            .allow_origin(Origin::from("*"))
+            .allow_credentials(false);
+
+        app.with(cors);
+
         app.at("/agent")
             .get(Self::list_agent)
             .post(Self::create_agent);
