@@ -2,11 +2,14 @@ mod message;
 mod object;
 use aes_gcm::{aead::Aead, Aes256Gcm, KeyInit, Nonce};
 use bytes::{Buf, BufMut, BytesMut};
+use flate2::Compression;
+use flate2::{read::ZlibDecoder, write::ZlibEncoder};
 pub use message::*;
 pub use object::*;
 use rand::Rng;
 use serde::{de::DeserializeOwned, Serialize};
 use sha2::{Digest, Sha256};
+use std::io::{Read, Write};
 
 const MAGIC: [u8; 4] = [0x23, 0x33, 0x23, 0x33];
 
@@ -32,6 +35,19 @@ pub fn encode(t: impl Serialize, buf: &mut BytesMut, key: &Key) -> bool {
         Ok(bytes) => bytes,
         Err(e) => {
             log::error!("serialize error: {}", e);
+            return false;
+        }
+    };
+
+    let mut e = ZlibEncoder::new(Vec::new(), Compression::default());
+    if let Err(e) = e.write_all(&bytes) {
+        log::error!("compress error: {}", e);
+        return false;
+    }
+    let bytes = match e.finish() {
+        Ok(bytes) => bytes,
+        Err(e) => {
+            log::error!("compress error: {}", e);
             return false;
         }
     };
@@ -88,7 +104,11 @@ where
         Err(_) => return Err(DecodeError::InvalidData),
     };
 
-    let msg = match bincode::deserialize(&bytes) {
+    let mut zd = ZlibDecoder::new(&bytes[..]);
+    let mut objbytes = Vec::new();
+    zd.read_to_end(&mut objbytes).unwrap();
+
+    let msg = match bincode::deserialize(&objbytes) {
         Ok(msg) => msg,
         Err(_) => return Err(DecodeError::InvalidData),
     };
